@@ -2,12 +2,13 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
-local friendUser = "TheirUsernameHere"  -- Replace with friend's exact username!
+local friendUser = "TheirUsernameHere"  -- Replace with friend's username
 local apiUrl = "https://your-ngrok-url.example.com/getjob?user=" .. friendUser
+
 local lastFriendJobId = ""
 local lastTeleportTime = 0
-local debounceTime = 3  -- Min seconds between teleports
-local pollInterval = 10  -- Seconds between checks
+local debounceTime = 3  -- Minimum seconds between teleports
+local pollInterval = 0.1  -- Poll every 0.1 seconds
 
 print("Auto-follower started for " .. friendUser .. "! Polling every " .. pollInterval .. "s")
 
@@ -29,8 +30,7 @@ spawn(function()
                     local myJobId = game.JobId
                     local now = tick()
                     if myJobId ~= friendJobId and (now - lastTeleportTime) >= debounceTime then
-                        print("Friend changed to new job ID: " .. friendJobId .. " → Waiting 0.5s then auto-teleporting!")
-                        task.wait(0.5)  -- Key: 0.5s wait to prevent crash!
+                        print("Friend changed to new job ID: " .. friendJobId .. " → Teleporting!")
                         lastTeleportTime = tick()
                         local teleportSuccess, errorMsg = pcall(function()
                             TeleportService:TeleportToPlaceInstance(friendPlaceId, friendJobId, {Players.LocalPlayer})
@@ -38,16 +38,8 @@ spawn(function()
                         if not teleportSuccess then
                             warn("Teleport failed: " .. tostring(errorMsg))
                         end
-                    elseif (now - lastTeleportTime) < debounceTime then
-                        print("Teleport debounced (too soon after last one).")
-                    else
-                        print("Already in same server as friend!")
                     end
-                else
-                    warn("Friend is in different place! (" .. friendPlaceId .. " vs " .. myPlaceId .. ")")
                 end
-            elseif not friendJobId then
-                print("No active job ID from friend (not in game?)")
             end
         else
             warn("Poll failed: " .. tostring(response))
