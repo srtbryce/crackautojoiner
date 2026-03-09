@@ -7,7 +7,7 @@ if jobId == "" then
     return
 end
 
-local myUser = Players.LocalPlayer.Name
+local myUser = "global"
 local apiUrl = "https://crackaj.vercel.app/update" -- FIXED
 
 local data = {
