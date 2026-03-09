@@ -8,7 +8,7 @@ if jobId == "" then
 end
 
 local myUser = "global"
-local apiUrl = "https://crackaj.vercel.app/update" -- FIXED
+local apiUrl = "https://8f352b3f-b533-4a33-b6f4-312ef0eace4d-00-107ppso2ogc0.janeway.replit.dev/update" -- FIXED
 
 local data = {
     user = myUser,
