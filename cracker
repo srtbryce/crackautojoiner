@@ -3,7 +3,7 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
 -- The "user" key you used in your API. Could be "friend" or anything consistent.
-local apiUserKey = "friend"  
+local apiUserKey = "global"  
 local apiUrl = "https://crackaj.vercel.app/getjob?user=" .. apiUserKey
 
 local lastJobId = ""
