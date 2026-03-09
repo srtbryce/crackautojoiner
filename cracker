@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
-local apiUrl = "https://crackaj.vercel.app/getjob?user=global"
+local apiUrl = "https://8f352b3f-b533-4a33-b6f4-312ef0eace4d-00-107ppso2ogc0.janeway.replit.dev/getjob?user=global"
 
 local lastJobId = ""
 local lastTeleportTime = 0
