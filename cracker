@@ -2,15 +2,14 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
-local friendUser = "TheirUsernameHere"  -- Replace with friend's username
-local apiUrl = "https://your-ngrok-url.example.com/getjob?user=" .. friendUser
+-- The "user" key you used in your API. Could be "friend" or anything consistent.
+local apiUserKey = "friend"  
+local apiUrl = "https://crackaj.vercel.app/getjob?user=" .. apiUserKey
 
-local lastFriendJobId = ""
+local lastJobId = ""
 local lastTeleportTime = 0
-local debounceTime = 3  -- Minimum seconds between teleports
-local pollInterval = 0.1  -- Poll every 0.1 seconds
-
-print("Auto-follower started for " .. friendUser .. "! Polling every " .. pollInterval .. "s")
+local debounceTime = 3      -- Min seconds between teleports
+local pollInterval = 0.1    -- How often to check
 
 spawn(function()
     while true do
@@ -23,26 +22,28 @@ spawn(function()
             local friendJobId = data.jobId
             local friendPlaceId = data.placeId
 
-            if friendJobId and friendJobId ~= "" and friendJobId ~= lastFriendJobId then
-                lastFriendJobId = friendJobId
+            if friendJobId and friendJobId ~= "" and friendJobId ~= lastJobId then
+                lastJobId = friendJobId
                 local myPlaceId = game.PlaceId
                 if friendPlaceId == myPlaceId then
-                    local myJobId = game.JobId
                     local now = tick()
-                    if myJobId ~= friendJobId and (now - lastTeleportTime) >= debounceTime then
-                        print("Friend changed to new job ID: " .. friendJobId .. " → Teleporting!")
-                        lastTeleportTime = tick()
-                        local teleportSuccess, errorMsg = pcall(function()
+                    if game.JobId ~= friendJobId and (now - lastTeleportTime) >= debounceTime then
+                        lastTeleportTime = now
+                        local ok, err = pcall(function()
                             TeleportService:TeleportToPlaceInstance(friendPlaceId, friendJobId, {Players.LocalPlayer})
                         end)
-                        if not teleportSuccess then
-                            warn("Teleport failed: " .. tostring(errorMsg))
+                        if not ok then
+                            warn("Teleport failed: " .. tostring(err))
+                        else
+                            print("Teleported to new jobId: " .. friendJobId)
                         end
                     end
+                else
+                    warn("Friend is in a different place: " .. friendPlaceId)
                 end
             end
         else
-            warn("Poll failed: " .. tostring(response))
+            warn("Failed to fetch jobId: " .. tostring(response))
         end
 
         task.wait(pollInterval)
