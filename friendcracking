@@ -1,0 +1,29 @@
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+wait(5) -- Wait for the game to load
+
+local jobId = game.JobId
+if jobId == "" then
+    warn("Not in a live server (e.g., Studio test mode). Can't get job ID.")
+    return
+end
+
+local myUser = Players.LocalPlayer.Name  -- Or use Players.LocalPlayer.UserId for ID-based
+local apiUrl = "https://gay.com/gaurl"  -- Replace with your API URL
+
+local data = {
+    user = myUser,
+    jobId = jobId,
+    placeId = game.PlaceId  -- Include place ID in case of multi-place games
+}
+
+local success, response = pcall(function()
+    return HttpService:PostAsync(apiUrl, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+end)
+
+if success then
+    print("Job ID sent to API: " .. jobId)
+else
+    warn("Failed to send: " .. response)
+end
