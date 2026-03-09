@@ -1,0 +1,26 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+job_ids = {}  # In-memory storage (resets on restart; use a DB like SQLite for persistence if needed)
+
+@app.route('/update', methods=['POST'])
+def update_job():
+    data = request.json
+    user = data.get('user')
+    if not user:
+        return jsonify({'error': 'Missing user'}), 400
+    job_ids[user] = {
+        'jobId': data.get('jobId'),
+        'placeId': data.get('placeId')
+    }
+    return jsonify({'status': 'updated'})
+
+@app.route('/getjob', methods=['GET'])
+def get_job():
+    user = request.args.get('user')
+    if user in job_ids:
+        return jsonify(job_ids[user])
+    return jsonify({'error': 'User not found'}), 404
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
