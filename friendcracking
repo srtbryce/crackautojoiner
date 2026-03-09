@@ -1,8 +1,6 @@
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
-wait(5) -- Wait for the game to load
-
 local jobId = game.JobId
 if jobId == "" then
     warn("Not in a live server (e.g., Studio test mode). Can't get job ID.")
