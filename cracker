@@ -2,14 +2,14 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
--- The "user" key you used in your API. Could be "friend" or anything consistent.
-local apiUserKey = "global"  
-local apiUrl = "https://crackaj.vercel.app/getjob?user=" .. apiUserKey
+local apiUrl = "https://crackaj.vercel.app/getjob?user=global"
 
 local lastJobId = ""
 local lastTeleportTime = 0
-local debounceTime = 3      -- Min seconds between teleports
-local pollInterval = 0.1    -- How often to check
+local debounceTime = 3
+local pollInterval = 0.1
+
+print("Auto follower started. Polling every " .. pollInterval .. " seconds")
 
 spawn(function()
     while true do
@@ -24,26 +24,30 @@ spawn(function()
 
             if friendJobId and friendJobId ~= "" and friendJobId ~= lastJobId then
                 lastJobId = friendJobId
+
                 local myPlaceId = game.PlaceId
                 if friendPlaceId == myPlaceId then
+                    local myJobId = game.JobId
                     local now = tick()
-                    if game.JobId ~= friendJobId and (now - lastTeleportTime) >= debounceTime then
-                        lastTeleportTime = now
-                        local ok, err = pcall(function()
+
+                    if myJobId ~= friendJobId and (now - lastTeleportTime) >= debounceTime then
+                        print("New jobId detected → teleporting")
+                        task.wait(0.5)
+
+                        lastTeleportTime = tick()
+
+                        local teleportSuccess, errorMsg = pcall(function()
                             TeleportService:TeleportToPlaceInstance(friendPlaceId, friendJobId, {Players.LocalPlayer})
                         end)
-                        if not ok then
-                            warn("Teleport failed: " .. tostring(err))
-                        else
-                            print("Teleported to new jobId: " .. friendJobId)
+
+                        if not teleportSuccess then
+                            warn("Teleport failed: " .. tostring(errorMsg))
                         end
                     end
-                else
-                    warn("Friend is in a different place: " .. friendPlaceId)
                 end
             end
         else
-            warn("Failed to fetch jobId: " .. tostring(response))
+            warn("API request failed: " .. tostring(response))
         end
 
         task.wait(pollInterval)
