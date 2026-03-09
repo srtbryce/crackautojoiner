@@ -7,17 +7,21 @@ if jobId == "" then
     return
 end
 
-local myUser = Players.LocalPlayer.Name  -- Or use Players.LocalPlayer.UserId for ID-based
-local apiUrl = "https://gay.com/gaurl"  -- Replace with your API URL
+local myUser = Players.LocalPlayer.Name
+local apiUrl = "https://crackaj.vercel.app/update" -- FIXED
 
 local data = {
     user = myUser,
     jobId = jobId,
-    placeId = game.PlaceId  -- Include place ID in case of multi-place games
+    placeId = game.PlaceId
 }
 
 local success, response = pcall(function()
-    return HttpService:PostAsync(apiUrl, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+    return HttpService:PostAsync(
+        apiUrl,
+        HttpService:JSONEncode(data),
+        Enum.HttpContentType.ApplicationJson
+    )
 end)
 
 if success then
