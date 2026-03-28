@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Datas = ReplicatedStorage:WaitForChild("Datas")
@@ -12,12 +13,12 @@ local AnimalsData = require(Datas:WaitForChild("Animals"))
 local AnimalsShared = require(Shared:WaitForChild("Animals"))
 
 local WS_URL = "wss://websocket-test-dp06.onrender.com"
-game:GetService("RunService"):Set3dRenderingEnabled(false)
+
+RunService:Set3dRenderingEnabled(false)
 
 local function getBestBrainrotInServer()
 	local plots = Workspace:FindFirstChild("Plots")
 	if not plots then
-		warn("No plots folder found")
 		return nil, nil
 	end
 
@@ -50,17 +51,24 @@ local function getBestBrainrotInServer()
 							end)
 
 							if genSuccess and generation then
-								if generation > bestValue then
-									bestValue = generation
-									bestPlot = plot.Name
+								local rarity = info.Rarity or "Unknown"
+								local isValidRarity = (rarity == "Secret" or rarity == "OG")
+								local isFastEnough = generation >= 35000000
 
-									best = {
-										name = info.DisplayName or animalName,
-										gen = generation,
-										mutation = animalData.Mutation or "None",
-										slot = slot,
-										jobId = game.JobId
-									}
+								if isValidRarity and isFastEnough then
+									if generation > bestValue then
+										bestValue = generation
+										bestPlot = plot.Name
+
+										best = {
+											name = info.DisplayName or animalName,
+											gen = generation,
+											mutation = animalData.Mutation or "None",
+											slot = slot,
+											jobId = game.JobId,
+											rarity = rarity
+										}
+									end
 								end
 							end
 						end
@@ -73,76 +81,58 @@ local function getBestBrainrotInServer()
 	return best, bestPlot
 end
 
---------------------------------------------------
--- 📤 SEND TO SERVER
---------------------------------------------------
-
 local socket = nil
 
 local function connectSocket()
-	print("[WS] Connecting...")
-
 	local success, ws = pcall(function()
 		return WebSocket.connect(WS_URL)
 	end)
 
 	if success and ws then
 		socket = ws
-		print("[WS] Connected")
 
 		ws.OnClose:Connect(function()
-			print("[WS] Closed")
 			socket = nil
+			task.wait(2)
+			connectSocket()
 		end)
 	else
-		warn("[WS] Failed to connect")
+		task.wait(2)
+		connectSocket()
 	end
 end
 
 connectSocket()
 
-local function sendToServer(data, plot)
-	if not data then return end
-	if not socket then
-		warn("No socket, cannot send")
-		return
-	end
+local function sendToServer(data)
+	if not data or not socket then return end
 
 	local payload = {
-		type = "log", -- IMPORTANT
+		type = "log",
 		name = data.name,
 		gen = data.gen,
 		mutation = data.mutation,
+		rarity = data.rarity,
 		jobId = data.jobId,
 		time = os.time()
 	}
 
-	local ok, err = pcall(function()
+	pcall(function()
 		socket:Send(HttpService:JSONEncode(payload))
 	end)
+end
 
-	if ok then
-		print("[SENT]", payload.name, payload.gen)
-	else
-		warn("Send failed:", err)
+local lastSentId = nil
+
+RunService.Heartbeat:Connect(function()
+	local best = getBestBrainrotInServer()
+
+	if best then
+		local id = best.name .. "_" .. best.gen .. "_" .. best.jobId
+
+		if id ~= lastSentId then
+			lastSentId = id
+			sendToServer(best)
+		end
 	end
-end
-
---------------------------------------------------
--- 🚀 RUN
---------------------------------------------------
-
-local best, plot = getBestBrainrotInServer()
-
-if best then
-	print("=== BEST BRAINROT ===")
-	print("NAME:", best.name)
-	print("GEN:", best.gen)
-	print("MUTATION:", best.mutation)
-	print("PLOT:", plot)
-	print("JOBID:", best.jobId)
-
-	sendToServer(best, plot)
-else
-	warn("No brainrot found")
-end
+end)
