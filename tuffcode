@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
 
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Datas = ReplicatedStorage:WaitForChild("Datas")
@@ -24,7 +25,6 @@ local function getBestBrainrotInServer()
 
 	local best = nil
 	local bestValue = -math.huge
-	local bestPlot = nil
 
 	for _, plot in ipairs(plots:GetChildren()) do
 		local success, container = pcall(function()
@@ -52,19 +52,14 @@ local function getBestBrainrotInServer()
 
 							if genSuccess and generation then
 								local rarity = info.Rarity or "Unknown"
-								local isValidRarity = (rarity == "Secret" or rarity == "OG")
-								local isFastEnough = generation >= 35000000
-
-								if isValidRarity and isFastEnough then
+								if (rarity == "Secret" or rarity == "OG") and generation >= 35000000 then
 									if generation > bestValue then
 										bestValue = generation
-										bestPlot = plot.Name
 
 										best = {
 											name = info.DisplayName or animalName,
 											gen = generation,
 											mutation = animalData.Mutation or "None",
-											slot = slot,
 											jobId = game.JobId,
 											rarity = rarity
 										}
@@ -78,7 +73,7 @@ local function getBestBrainrotInServer()
 		end
 	end
 
-	return best, bestPlot
+	return best
 end
 
 local socket = nil
@@ -134,5 +129,12 @@ RunService.Heartbeat:Connect(function()
 			lastSentId = id
 			sendToServer(best)
 		end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(60)
+		TeleportService:Teleport(game.PlaceId)
 	end
 end)
